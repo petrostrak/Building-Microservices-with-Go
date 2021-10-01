@@ -8,17 +8,15 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/petrostrak/Building-Microservices-with-Go/handlers"
+	"github.com/petrostrak/Building-Microservices-with-Go/product-api/handlers"
 )
 
 func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
-	hh := handlers.NewHello(l)
-	gh := handlers.NewGoodbye(l)
+	ph := handlers.NewProduct(l)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", hh)
-	mux.Handle("/goodbye", gh)
+	mux.Handle("/", ph)
 
 	s := &http.Server{
 		Addr:         ":9090",
