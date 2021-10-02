@@ -30,9 +30,23 @@ func (p *Products) ToJSON(w io.Writer) error {
 	return json.NewEncoder(w).Encode(p)
 }
 
+func (p *Product) FromJSON(r io.Reader) error {
+	return json.NewDecoder(r).Decode(p)
+}
+
 // GetProducts returns a list of products
 func GetProducts() Products {
 	return productList
+}
+
+func AddProduct(p *Product) {
+	p.ID = getNextID()
+	productList = append(productList, p)
+}
+
+func getNextID() int {
+	lp := productList[len(productList)-1]
+	return lp.ID + 1
 }
 
 // productList is a hard coded list of products for this

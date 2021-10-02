@@ -24,15 +24,34 @@ func (p *Product) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		p.getProducts(rw, r)
 	}
 
+	if r.Method == http.MethodPost {
+		p.addProduct(rw, r)
+	}
 	// handle an update
 
 	// catch all
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
+func (p *Product) addProduct(rw http.ResponseWriter, r *http.Request) {
+	p.l.Println("Handle POST Products")
+
+	prod := &data.Product{}
+	if err := prod.FromJSON(r.Body); err != nil {
+		http.Error(rw, "cannot decode from json", http.StatusBadRequest)
+	}
+
+	data.AddProduct(prod)
+}
+
 // getProducts returns the products from the data store
 func (p *Product) getProducts(rw http.ResponseWriter, r *http.Request) {
+	p.l.Println("Handle GET Products")
+
+	// fetch the products from the datastore
 	lp := data.GetProducts()
+
+	// serialize the list to JSON
 	if err := lp.ToJSON(rw); err != nil {
 		http.Error(rw, "cannot encode to json", http.StatusInternalServerError)
 	}
