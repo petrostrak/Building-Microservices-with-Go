@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Products is a collection of Product
 type Product struct {
 	ID          int     `json:"id"`
 	Name        string  `json:"name"`
@@ -19,14 +20,23 @@ type Product struct {
 
 type Products []*Product
 
+// ToJSON serializes the contents of the collection to JSON
+// NewEncoder provides better performance than json.Unmarshal as it does not
+// have to buffer the output into an in memory slice of bytes
+// this reduces allocations and the overheads of the service
+//
+// https://golang.org/pkg/encoding/json/#NewEncoder
 func (p *Products) ToJSON(w io.Writer) error {
 	return json.NewEncoder(w).Encode(p)
 }
 
+// GetProducts returns a list of products
 func GetProducts() Products {
 	return productList
 }
 
+// productList is a hard coded list of products for this
+// example data source
 var productList = []*Product{
 	{
 		ID:          1,
