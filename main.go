@@ -9,10 +9,16 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/nicholasjackson/env"
 	"github.com/petrostrak/Building-Microservices-with-Go/product-api/handlers"
 )
 
+var bindAddress = env.String("BIND_ADDRESS", false, ":9090", "Bind address for the server")
+
 func main() {
+
+	env.Parse()
+
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
 	ph := handlers.NewProduct(l)
 
@@ -25,7 +31,7 @@ func main() {
 	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
 
 	s := &http.Server{
-		Addr:         ":9090",
+		Addr:         *bindAddress,
 		Handler:      sm,
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  1 * time.Second,
