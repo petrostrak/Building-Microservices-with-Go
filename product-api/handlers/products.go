@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strconv"
@@ -67,4 +68,24 @@ func (p *Product) GetProducts(rw http.ResponseWriter, r *http.Request) {
 	if err := lp.ToJSON(rw); err != nil {
 		http.Error(rw, "cannot encode to json", http.StatusInternalServerError)
 	}
+}
+
+type KeyProduct struct{}
+
+// MiddlewareProductValidation validates the product in the request and calls next if ok
+func (p *Product) MiddlewareProductValidation(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		prod := data.Product{}
+
+		if err := prod.FromJSON(r.Body); err != nil {
+			p.l.Println("[ERROR] deserializing product", err)
+			http.Error(rw, "error reading product", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), KeyProduct{}, prod)
+		req := r.WithContext(ctx)
+
+		next.ServeHTTP(rw, req)
+	})
 }
