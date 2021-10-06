@@ -6,9 +6,9 @@ import (
 	"github.com/petrostrak/Building-Microservices-with-Go/product-api/data"
 )
 
-func (p *Product) AddProduct(rw http.ResponseWriter, r *http.Request) {
+func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle POST Products")
 
 	prod := r.Context().Value(KeyProduct{}).(data.Product)
-	data.AddProduct(&prod)
+	data.AddProduct(prod)
 }

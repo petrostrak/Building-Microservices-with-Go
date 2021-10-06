@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"github.com/nicholasjackson/env"
+	"github.com/petrostrak/Building-Microservices-with-Go/product-api/data"
 	"github.com/petrostrak/Building-Microservices-with-Go/product-api/handlers"
 )
 
@@ -20,21 +21,27 @@ func main() {
 
 	env.Parse()
 
-	l := log.New(os.Stdout, "product-api", log.LstdFlags)
-	ph := handlers.NewProduct(l)
+	l := log.New(os.Stdout, "products-api ", log.LstdFlags)
+	v := data.NewValidation()
 
+	// create the handlers
+	ph := handlers.NewProducts(l, v)
+
+	// create a new serve mux and register the handlers
 	sm := mux.NewRouter()
 
+	// handlers for API
 	getR := sm.Methods(http.MethodGet).Subrouter()
-	getR.HandleFunc("/", ph.GetProducts)
+	getR.HandleFunc("/products", ph.ListAll)
+	getR.HandleFunc("/products/{id:[0-9]+}", ph.ListSingle)
 
 	putR := sm.Methods(http.MethodPut).Subrouter()
-	putR.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
-	putR.Use(ph.MiddlewareProductValidation)
+	putR.HandleFunc("/products", ph.Update)
+	putR.Use(ph.MiddlewareValidateProduct)
 
 	postR := sm.Methods(http.MethodPost).Subrouter()
-	postR.HandleFunc("", ph.AddProduct)
-	postR.Use(ph.MiddlewareProductValidation)
+	postR.HandleFunc("/products", ph.Create)
+	postR.Use(ph.MiddlewareValidateProduct)
 
 	deleteR := sm.Methods(http.MethodDelete).Subrouter()
 	deleteR.HandleFunc("/products/{id:[0-9]+}", ph.Delete)

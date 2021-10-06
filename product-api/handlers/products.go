@@ -25,25 +25,19 @@ import (
 	"github.com/petrostrak/Building-Microservices-with-Go/product-api/data"
 )
 
-// A list of products returns in the response
-// swagger:response productsResponse
-type productsResponseWrapper struct {
-	// All products in the system
-	// in: body
-	Body []data.Product
-}
-
-// Products is a http.Handler
-type Product struct {
-	l *log.Logger
-}
-
-// NewProducts creates a products handler with the given logger
-func NewProduct(l *log.Logger) *Product {
-	return &Product{l}
-}
-
+// KeyProduct is a key used for the Product object in the context
 type KeyProduct struct{}
+
+// Products handler for getting and updating products
+type Products struct {
+	l *log.Logger
+	v *data.Validation
+}
+
+// NewProducts returns a new products handler with the given logger
+func NewProducts(l *log.Logger, v *data.Validation) *Products {
+	return &Products{l, v}
+}
 
 // ErrInvalidProductPath is an error message when the product path is not valid
 var ErrInvalidProductPath = fmt.Errorf("Invalid Path, path should be /products/[id]")
