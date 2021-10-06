@@ -35,11 +35,7 @@ func validateSKU(fl validator.FieldLevel) bool {
 	re := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
 	matches := re.FindAllString(fl.Field().String(), -1)
 
-	if len(matches) != 1 {
-		return false
-	}
-
-	return true
+	return len(matches) == 1
 }
 
 // ToJSON serializes the contents of the collection to JSON
