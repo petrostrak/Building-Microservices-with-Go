@@ -1,100 +1,52 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"time"
-
-	"github.com/go-playground/validator/v10"
 )
 
-// Products is a collection of Product
-type Product struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name" validate:"required"`
-	Description string  `json:"description"`
-	Price       float32 `json:"price" validate:"gt=0"`
-	SKU         string  `json:"sku" validate:"required,sku"`
-	CreatedOn   string  `json:"-"`
-	UpdatedOn   string  `json:"-"`
-	DeletedOn   string  `json:"-"`
-}
-
-type Products []*Product
-
-func (p *Product) Validate() error {
-	validate := validator.New()
-	validate.RegisterValidation("sku", validateSKU)
-	return validate.Struct(p)
-}
-
-// ToJSON serializes the contents of the collection to JSON
-// NewEncoder provides better performance than json.Unmarshal as it does not
-// have to buffer the output into an in memory slice of bytes
-// this reduces allocations and the overheads of the service
-//
-// https://golang.org/pkg/encoding/json/#NewEncoder
-func (p *Products) ToJSON(w io.Writer) error {
-	return json.NewEncoder(w).Encode(p)
-}
-
-func (p *Product) FromJSON(r io.Reader) error {
-	return json.NewDecoder(r).Decode(p)
-}
-
-// GetProducts returns a list of products
-func GetProducts() Products {
-	return productList
-}
-
+// ErrProductNotFound is an error raised when a product can not be found in the database
 var ErrProductNotFound = fmt.Errorf("Product not found")
 
-func findProduct(id int) (*Product, int, error) {
-	for i, p := range productList {
-		if p.ID == id {
-			return p, i, nil
-		}
-	}
+// Product defines the structure for an API product
+// swagger:model
+type Product struct {
+	// the id for the product
+	//
+	// required: false
+	// min: 1
+	ID int `json:"id"` // Unique identifier for the product
 
-	return nil, -1, ErrProductNotFound
+	// the name for this poduct
+	//
+	// required: true
+	// max length: 255
+	Name string `json:"name" validate:"required"`
+
+	// the description for this poduct
+	//
+	// required: false
+	// max length: 10000
+	Description string `json:"description"`
+
+	// the price for the product
+	//
+	// required: true
+	// min: 0.01
+	Price float32 `json:"price" validate:"required,gt=0"`
+
+	// the SKU for the product
+	//
+	// required: true
+	// pattern: [a-z]+-[a-z]+-[a-z]+
+	SKU string `json:"sku" validate:"sku"`
 }
 
-// AddProduct adds a new product to the database
-func AddProduct(p Product) {
-	// get the next id in sequence
-	maxID := productList[len(productList)-1].ID
-	p.ID = maxID + 1
-	productList = append(productList, &p)
-}
+// Products defines a slice of Product
+type Products []*Product
 
-func getNextID() int {
-	lp := productList[len(productList)-1]
-	return lp.ID + 1
-}
-
-// DeleteProduct deletes a product from the database
-func DeleteProduct(id int) error {
-	i := findIndexByProductID(id)
-	if i == -1 {
-		return ErrProductNotFound
-	}
-
-	productList = append(productList[:i], productList[i+1])
-
-	return nil
-}
-
-// findIndex finds the index of a product in the database
-// returns -1 when no product can be found
-func findIndexByProductID(id int) int {
-	for i, p := range productList {
-		if p.ID == id {
-			return i
-		}
-	}
-
-	return -1
+// GetProducts returns all products from the database
+func GetProducts() Products {
+	return productList
 }
 
 // GetProductByID returns a single product which matches the id from the
@@ -125,6 +77,38 @@ func UpdateProduct(p Product) error {
 	return nil
 }
 
+// AddProduct adds a new product to the database
+func AddProduct(p Product) {
+	// get the next id in sequence
+	maxID := productList[len(productList)-1].ID
+	p.ID = maxID + 1
+	productList = append(productList, &p)
+}
+
+// DeleteProduct deletes a product from the database
+func DeleteProduct(id int) error {
+	i := findIndexByProductID(id)
+	if i == -1 {
+		return ErrProductNotFound
+	}
+
+	productList = append(productList[:i], productList[i+1])
+
+	return nil
+}
+
+// findIndex finds the index of a product in the database
+// returns -1 when no product can be found
+func findIndexByProductID(id int) int {
+	for i, p := range productList {
+		if p.ID == id {
+			return i
+		}
+	}
+
+	return -1
+}
+
 // productList is a hard coded list of products for this
 // example data source
 var productList = []*Product{
@@ -134,8 +118,6 @@ var productList = []*Product{
 		Description: "Frothy milky coffee",
 		Price:       2.45,
 		SKU:         "abc123",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
 	},
 	{
 		ID:          2,
@@ -143,8 +125,6 @@ var productList = []*Product{
 		Description: "Short and strong coffee without milk",
 		Price:       1.99,
 		SKU:         "abc321",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
 	},
 	{
 		ID:          3,
@@ -152,7 +132,5 @@ var productList = []*Product{
 		Description: "Quick and tasty",
 		Price:       2.50,
 		SKU:         "cba123",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
 	},
 }

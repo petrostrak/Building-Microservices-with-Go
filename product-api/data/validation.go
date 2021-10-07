@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator"
 )
 
 // ValidationError wraps the validators FieldError so we do not
@@ -84,9 +84,13 @@ func (v *Validation) Validate(i interface{}) ValidationErrors {
 
 // validateSKU
 func validateSKU(fl validator.FieldLevel) bool {
-	// sku is of format abc-absd-abcdf
+	// SKU must be in the format abc-abc-abc
 	re := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
-	matches := re.FindAllString(fl.Field().String(), -1)
+	sku := re.FindAllString(fl.Field().String(), -1)
 
-	return len(matches) == 1
+	if len(sku) == 1 {
+		return true
+	}
+
+	return false
 }
