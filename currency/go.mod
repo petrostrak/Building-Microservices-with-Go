@@ -1,6 +1,6 @@
-module github.com/nicholasjackson/building-microservices-youtube/currency
+module github.com/petrostrak/Building-Microservices-with-Go/currency
 
-go 1.13
+go 1.17
 
 require (
 	github.com/fullstorydev/grpcurl v1.5.0 // indirect

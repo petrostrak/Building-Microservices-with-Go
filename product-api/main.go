@@ -12,8 +12,10 @@ import (
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/nicholasjackson/env"
+	protos "github.com/petrostrak/Building-Microservices-with-Go/currency/protos/currency"
 	"github.com/petrostrak/Building-Microservices-with-Go/product-api/data"
 	"github.com/petrostrak/Building-Microservices-with-Go/product-api/handlers"
+	"google.golang.org/grpc"
 )
 
 var bindAddress = env.String("BIND_ADDRESS", false, ":9090", "Bind address for the server")
@@ -25,8 +27,18 @@ func main() {
 	l := log.New(os.Stdout, "products-api ", log.LstdFlags)
 	v := data.NewValidation()
 
+	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	defer conn.Close()
+
+	// create client
+	cc := protos.NewCurrencyClient(conn)
+
 	// create the handlers
-	ph := handlers.NewProducts(l, v)
+	ph := handlers.NewProducts(l, v, cc)
 
 	// create a new serve mux and register the handlers
 	sm := mux.NewRouter()
@@ -70,7 +82,9 @@ func main() {
 	// start the server
 	go func() {
 		l.Println("Starting server on port 9090")
-		if err := s.ListenAndServe(); err != nil {
+
+		err := s.ListenAndServe()
+		if err != nil {
 			l.Printf("Error starting server: %s\n", err)
 			os.Exit(1)
 		}
