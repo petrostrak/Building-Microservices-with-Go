@@ -22,16 +22,18 @@ func NewRates(l hclog.Logger) (*ExchangeRates, error) {
 	return er, err
 }
 
-// Cube is the xml struct of the www.ecb.europa.eu response
-type Cubes struct {
-	CubeData []Cube `xml:"Cube>Cube>Cube"`
-}
+func (e *ExchangeRates) GetRate(base, dest string) (float64, error) {
+	br, ok := e.rates[base]
+	if !ok {
+		return 0, fmt.Errorf("Rate not found for currency %s", base)
+	}
 
-// Cube struct is the object withing the Cube within the Cube
-// Here we extract the attributes of the Cube
-type Cube struct {
-	Currency string `xml:"currency,attr"`
-	Rate     string `xml:"rate,attr"`
+	dr, ok := e.rates[dest]
+	if !ok {
+		return 0, fmt.Errorf("Rate not found for currency %s", dest)
+	}
+
+	return dr / br, nil
 }
 
 func (e *ExchangeRates) getRates() error {
@@ -41,7 +43,7 @@ func (e *ExchangeRates) getRates() error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("expected error code 200 got %d", resp.StatusCode)
+		return fmt.Errorf("Expected error code 200 got %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
@@ -57,5 +59,16 @@ func (e *ExchangeRates) getRates() error {
 		e.rates[c.Currency] = r
 	}
 
+	e.rates["EUR"] = 1
+
 	return nil
+}
+
+type Cubes struct {
+	CubeData []Cube `xml:"Cube>Cube>Cube"`
+}
+
+type Cube struct {
+	Currency string `xml:"currency,attr"`
+	Rate     string `xml:"rate,attr"`
 }
